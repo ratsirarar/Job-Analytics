@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<head>
+	<title>Job Analytics</title>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+	<script src="http://code.highcharts.com/highcharts.js"></script>
+	<script src="http://code.highcharts.com/modules/exporting.js"></script>
+	
+	
+</head>
+
+<body>
+	<div id="loading"></div>
+	<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+	<script >
+	
+	var result="";
+	$("div#loading").ajaxStart(function() { $(this).text("Loading...");	});
+	
+	/*
+	 * get data from ajax
+	 */
+	var data='';
+	$.ajax({
+			url: 'http://localhost/eclipse/ruby/mechanize/index.php',
+			dataType: 'json',
+			success: function (json)
+			{
+				data= json;
+				alert('is working');
+			},	
+			error: function ()
+			{
+				alert('not working');
+			}
+		});
+	
+	
+	$("div#loading").ajaxComplete(function() {
+    			$(this).text("");
+    			//console.log(getSeries(data));
+    			plot(getAxis(data),getSeries(data));                	
+    			});
+		
+	/**
+	 * Getting the list of xAxis to be plotted being displayed
+	 * @param json {'java':{'TN':1, 'CA':2}}
+	 * @return array ['java', 'php']
+	 */
+	function getAxis(json){
+		tempArray= new Array();
+    			for (var k in json) 
+    			{
+    				tempArray.push(String(k));
+    			}
+		return tempArray;
+	}
+	
+	/**
+	 * This function get the series
+	 * @param json {'java':{'TN':1, 'CA':2}}
+	 * @return json object [{name:'TN', data:[1,2,3]}]
+	 */
+	function getSeries(json)
+	{
+		var cached= new Array();
+		var tempSeries= new Array();
+		var keepedData= new Array();
+			
+		for (var k in json)
+		{
+			
+			for (var i in json[k])
+			{
+				var template= {
+			name:'',
+			data:[]
+			};
+				if (cached.indexOf(String(i))==-1){
+					template.name=String(i);
+					template.data.push(json[k][i]);
+					tempSeries.push(template);
+					cached.push(String(i));
+				}
+				else
+					{
+						tempArray=tempSeries[cached.indexOf(String(i))].data;
+						tempSeries[cached.indexOf(String(i))].data.push(json[k][i]);
+					}
+				
+			}
+			
+		}
+		return tempSeries;
+        //return JSON.stringify(temp);
+	}
+	
+	function number_to_proba(json)
+	{
+		for (var i=0;i<count(array);i++)
+		{
+			json[i].data= i;
+		}
+	}
+	
+	function P(array,json)
+	{
+		sumArray=sum(json);
+		Parray=new Array();
+		
+		for (var i=0;i<count(array);i++)
+		{
+			Parray.push(array[i]/sumArray);
+		} 
+		return Parray;
+	}
+	
+	function sum(json)
+	{
+		resu=0;
+		for (var i=0;i<count(array);i++)
+		{
+			resu+=array[i];
+		}
+		return resu;
+	}
+	
+	
+	/*
+	 * Charting data
+	 */
+	//alert(json);
+	
+	
+	
+	function plot(languages, seri){
+   var chart;
+   chart = new Highcharts.Chart({
+
+            chart: {
+
+                renderTo: 'container',
+
+                type: 'column'
+
+            },
+
+            title: {
+
+                text: 'Available Jobs by Languages'
+
+            },
+
+            subtitle: {
+
+                text: 'Source: indeed.com'
+
+            },
+
+            xAxis: {
+
+                categories: languages
+
+            },
+
+            yAxis: {
+
+                min: 0,
+
+                title: {
+
+                    text: 'Number of Jobs'
+
+                }
+
+            },
+
+            legend: {
+
+                layout: 'vertical',
+
+                backgroundColor: '#FFFFFF',
+
+                align: 'left',
+
+                verticalAlign: 'top',
+
+                x: 100,
+
+                y: 70,
+
+                floating: true,
+
+                shadow: true
+
+            },
+
+            tooltip: {
+
+                formatter: function() {
+
+                    return ''+
+
+                        this.x +': '+ this.y +' jobs';
+
+                }
+
+            },
+
+            plotOptions: {
+
+                column: {
+
+                    pointPadding: 0.2,
+
+                    borderWidth: 0
+
+                }
+
+            },
+
+                series: seri
+
+        });
+
+        }
+	
+	
+	/*json='{"java":{"TN":547, "CA":14358, "NY":5679}, "php":{"TN":156, "CA":4730, "NY":2077}, "ruby":{"TN":85, "CA":3728, "NY":1326}, "C#":{"TN":388, "CA":4212, "NY":2629}, "python":{"TN":78, "CA":6566, "NY":2032}, "C++":{"TN":151, "CA":9682, "NY":3016}, "android":{"TN":21, "CA":3824, "NY":837}, "IOS":{"TN":37, "CA":3136, "NY":815}, ".net":{"TN":1111, "CA":9728, "NY":5096}}';
+	console.log(json);
+	console.log(getSeries(eval("("+json+")")));
+	
+	function getSeries(json)
+	{
+		var cached= new Array();
+		var tempSeries= new Array();
+		var keepedData= new Array();
+		
+		console.log(json['java']['TN']);
+		
+		for (var k in json)
+		{
+			
+			for (var i in json[k])
+			{
+				var template= {
+			name:'',
+			data:[]
+			};
+				if (cached.indexOf(String(i))==-1){
+					template.name=String(i);
+					template.data.push(json[k][i]);
+					tempSeries.push(template);
+					cached.push(String(i));
+				}
+				else
+					{
+						tempArray=tempSeries[cached.indexOf(String(i))].data;
+						tempSeries[cached.indexOf(String(i))].data.push(json[k][i]);
+					}
+				
+			}
+			
+		}
+		return tempSeries;
+        //return JSON.stringify(temp);
+	}*/
+	</script>
+</body>
+</html>
